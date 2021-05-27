@@ -1,0 +1,417 @@
+{% extends 'base.html' %} {% block head %} {% endblock %} {% block title %} Diagram Builder {% endblock %} {% block content %}
+
+<form id="regForm" action="/diagram" method="POST">
+
+    <h1>Diagram Builder:</h1>
+
+
+    <div class="diagramAlert" id="diagramAlert" >
+        <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+        You can't select this type of diagram, because you have selected more than 2 indexes.
+    </div>
+
+    <div class="scatterPlotAlert" id="scatterPlotAlert" >
+        <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+        You can't select this type of diagram, because you have selected more than 1 countries for two indexes.
+    </div>
+
+    <!-- One "tab" for each step in the form: -->
+    <div class="tab">Select one or more countries:
+        <div class="row">
+            <div class="col-md-6">
+                <select name="C_Name" data-live-search="true" id="C_Name" class="form-control" title="Select Country Name" multiple data-actions-box="true"> 
+                    {% for row in countries %}
+                    <option value="{{row.C_ID}}">{{row.C_Name}}</option>
+                    {% endfor %}
+                    </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab">Select years duration:
+        <div class="row">
+            <div class="col-md-6">
+                <select name="Year_Descr" data-live-search="true" id="Year_Descr" class="form-control" title="Select starting year"> 
+                {% for row in years %}
+                <option value="{{row.Y_ID}}">{{row.Year_Descr}}</option>
+                {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <select name="Year_Descr2" data-live-search="true" id="Year_Descr2" class="form-control" title="Select ending year"> 
+                {% for row in years %}
+                <option value="{{row.Y_ID}}">{{row.Year_Descr}}</option>
+                {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab">Select measure:
+        <div class="row"></div>
+        <div class="col-md-6"></div>
+        <select name="measure" data-live-search="true" id="measure" class="form-control" title="Select measure" multiple data-actions-box="true">
+                    <option value="1">Female industry workers percent of female employment</option>
+                    <option value="2">Female long term unemployment rate percent</option>
+                    <option value="3">Female service workers percent of female employment</option>
+                    <option value="4">Happiness score</option>
+                    <option value="5">Human development index</option>
+                    <option value="6">Industry percent of GDP</option>
+                    <option value="7">Industry workers percent of employment</option>
+                    <option value="8">Long term unemployment rate percent</option>
+                    <option value="9">Male industry workers percent of male employment</option>
+                    <option value="10">Male long term unemployment</option>
+                    <option value="11">Male service workers percent of male employment</option>
+                    <option value="12">Manuf employ</option>
+                    <option value="13">Services percent of GDP</option>
+                    <option value="14">Service workers percent of umployment</option>
+                </select>
+    </div>
+    </div>
+    </div>
+
+    <div class="tab">Select diagram style:
+        <div class="row"></div>
+        <div class="col-md-6"></div>
+        <select name="diagram" id="diagram" class="form-control" title="Select diagram">
+                        <option value="1">Timelines/Trendlines</option>
+                        <option value="2">Barcharts</option>
+                        <option value="3">Scatter plot</option>
+                </select>
+    </div>
+    </div>
+    </div>
+
+    
+
+    <div class="tab">Select time period for diagram:
+        <div class="row"></div>
+        <div class="col-md-6"></div>
+        <select name="time_period" id="time_period" class="form-control" title="Select time period">
+                        <option value="1">Year</option>
+                        <option value="2">Quinquennium</option>
+                        <option value="3">Decade</option>
+                        <option value="4">20 Years</option>
+                </select>
+    </div>
+    </div>
+    </div>
+
+
+    <div class="bnt" style="overflow:auto;">
+        <div style="float:right;">
+            <button type="button" id="prevBtn" onclick="nextPrev(-1)">Previous</button>
+            <button type="button" id="nextBtn" onclick="nextPrev(1)">Next</button>
+        </div>
+    </div>
+
+    <!-- Circles which indicates the steps of the form: -->
+    <div style="text-align:center;margin-top:40px;">
+        <span class="step"></span>
+        <span class="step"></span>
+        <span class="step"></span>
+        <span class="step"></span>
+        <span class="step"></span>
+    </div>
+
+</form>
+{% endblock %} {% block script %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/js/bootstrap-select.min.js"></script>
+<script>
+
+    $(document).ready(function() {
+        $("#C_Name").selectpicker();
+    })
+    $(document).ready(function() {
+        $("#Year_Descr").selectpicker();
+    })
+    $(document).ready(function() {
+        $("#Year_Descr2").selectpicker();
+    })
+    $(document).ready(function() {
+        $("#measure").selectpicker();
+    })
+    $(document).ready(function() {
+        $("#diagram").selectpicker();
+    })
+    $(document).ready(function() {
+        $("#time_period").selectpicker();
+    })
+</script>
+<script>
+    var currentTab = 0; // Current tab is set to be the first tab (0)
+    showTab(currentTab); // Display the current tab
+
+    function showTab(n) {
+        // This function will display the specified tab of the form ...
+        var x = document.getElementsByClassName("tab");
+        x[n].style.display = "block";
+        // ... and fix the Previous/Next buttons:
+        if (n == 0 ) {
+            document.getElementById("prevBtn").style.display = "none";
+        } else {
+            document.getElementById("prevBtn").style.display = "inline";
+        }
+        if (n == (x.length - 1)) {
+            document.getElementById("nextBtn").innerHTML = "Submit";
+        } else {
+            document.getElementById("nextBtn").innerHTML = "Next";
+        }
+        // ... and run a function that displays the correct step indicator:
+        fixStepIndicator(n)
+    }
+
+    function nextPrev(n) {
+        document.getElementById("prevBtn").style.visibility = "hidden";
+        document.getElementById("nextBtn").style.visibility = "hidden";
+        // This function will figure out which tab to display
+        var x = document.getElementsByClassName("tab");
+        // Exit the function if any field in the current tab is invalid:
+        if (n == 1 && !validateForm()) return false;
+        // Hide the current tab:
+        x[currentTab].style.display = "none";
+        // Increase or decrease the current tab by 1:
+        currentTab = currentTab + n;
+        // if you have reached the end of the form... :
+        if (currentTab >= x.length) {
+            //...the form gets submitted:  afou pati8ei to submit kane prama
+            document.getElementById("regForm").submit();
+            return false;
+        }
+        // Otherwise, display the correct tab:
+        showTab(currentTab);
+    }
+
+    function validateForm() {
+        // This function deals with validation of the form fields
+        var x, y, i, valid = true;
+        x = document.getElementsByClassName("tab");
+        y = x[currentTab].getElementsByTagName("input");
+        // A loop that checks every input field in the current tab     
+        
+        for (i = 0; i < y.length; i++) {
+            // If a field is empty...
+            if (y[i].value == "") {
+                // add an "invalid" class to the field:
+                y[i].className += " invalid";
+                // and set the current valid status to false:
+                valid = true;
+            }
+        }
+        // If the valid status is true, mark the step as finished and valid:
+        if (valid) {
+            document.getElementsByClassName("step")[currentTab].className += " finish";
+        }
+        return valid; // return the valid status
+    }
+
+    function fixStepIndicator(n) {
+        // This function removes the "active" class of all steps...
+        var i, x = document.getElementsByClassName("step");
+        for (i = 0; i < x.length; i++) {
+            x[i].className = x[i].className.replace(" active", "");
+        }
+        //... and adds the "active" class to the current step:
+        x[n].className += " active";
+    }
+</script>
+<script>
+    var alert = document.getElementById("diagramAlert");
+    alert.style.display = "none";
+    var salert = document.getElementById("scatterPlotAlert");
+    salert.style.display = "none";
+    document.getElementById("nextBtn").style.visibility = "hidden";
+    $(document).on("change", "#C_Name", function() {
+        var selectedCountries = $("#C_Name").val();
+        if (selectedCountries.length <= 0) {
+            document.getElementById("nextBtn").style.visibility = "hidden";
+        }
+        else{
+            document.getElementById("nextBtn").style.visibility = "visible";
+        }
+    });
+    var flag1 = 0;
+    var flag2 = 0;
+    $(document).on("change", "#Year_Descr", function() {
+        flag1 = flag1 + 1;
+        if(flag1 !== 1 || flag2 !==1 ) {
+            document.getElementById("nextBtn").style.visibility = "hidden";
+        }
+        else{
+            document.getElementById("nextBtn").style.visibility = "visible";
+        }
+    });
+    $(document).on("change", "#Year_Descr2", function() {
+        flag2 = flag2 + 1;
+        if(flag1 !== 1 || flag2 !==1 ) {
+            document.getElementById("nextBtn").style.visibility = "hidden";
+        }
+        else{
+            document.getElementById("nextBtn").style.visibility = "visible";
+        }
+    });
+
+    $(document).on("change", "#measure", function() {
+        var selectedMeasures = $("#measure").val();
+        var selectedCountries = $("#C_Name").val();
+        if (selectedMeasures.length <= 0) {
+            document.getElementById("nextBtn").style.visibility = "hidden";
+        }
+        else{
+            document.getElementById("nextBtn").style.visibility = "visible";
+        }
+        if(selectedCountries.length > 1 && selectedMeasures.length > 1){
+            document.getElementById("diagram").options[3].disabled = true;
+        }
+        if(selectedMeasures.length > 2){
+            document.getElementById("diagram").options[2].disabled = true;
+            document.getElementById("diagram").options[3].disabled = true;
+        }
+    });
+    $(document).on("change", "#diagram", function() {
+        if ($("#diagram").val() === "") {
+            document.getElementById("nextBtn").style.visibility = "hidden";
+        }
+        else{
+            document.getElementById("nextBtn").style.visibility = "visible";
+        }
+        var selectedMeasures = $("#measure").val();
+        var selectedCountries = $("#C_Name").val();        
+        if(selectedMeasures.length > 2){
+            var alert = document.getElementById("diagramAlert");
+            if ($("#diagram").val() === null) {
+                document.getElementById("nextBtn").style.visibility = "hidden";
+                alert.style.display = "block";
+            }
+            else{
+                document.getElementById("nextBtn").style.visibility = "visible";
+                alert.style.display = "none";
+            }
+        }
+        else if(selectedCountries.length > 1 && selectedMeasures.length > 1){
+            var alert = document.getElementById("scatterPlotAlert");
+            if ($("#diagram").val() === null) {
+                document.getElementById("nextBtn").style.visibility = "hidden";
+                alert.style.display = "block";
+            }
+            else{
+                document.getElementById("nextBtn").style.visibility = "visible";
+                alert.style.display = "none";
+            }
+        }
+    });
+    $(document).on("change", "#time_period", function() {
+        if ($("#time_period").val() === "") {
+            document.getElementById("nextBtn").style.visibility = "hidden";
+        }
+        else{
+            document.getElementById("nextBtn").style.visibility = "visible";
+        }
+    });
+
+</script>
+<script>
+    $(document).on("change", "#C_Name", function() {
+        var selectedCountries = $("#C_Name").val();
+        console.log(selectedCountries);
+        console.log(selectedCountries.length);
+    });
+    $(document).on("change", "#Year_Descr", function() {
+        var year1 = $("#Year_Descr").val();
+        console.log(year1);
+    });
+    $(document).on("change", "#Year_Descr2", function() {
+        var year2 = $("#Year_Descr2").val();
+        console.log(year2);
+    });
+    $(document).on("change", "#measure", function() {
+        var measure = $("#measure").val();
+        console.log(measure);
+    });
+    $(document).on("change", "#diagram", function() {
+        var diagram = $("#diagram").val();
+        console.log(diagram);
+    });
+    $(document).on("change", "#diagram", function() {
+        var diagram = $("#diagram").val();
+        console.log(diagram);
+    });
+</script>
+
+{% endblock %} {% block style %}
+<style>
+    /* Style the form */
+    
+    #regForm {
+        background-color: #c4c4c4;
+        margin: 0px auto;
+        padding: 0px;
+        width: 70%;
+        min-width: 300px;
+    }
+    
+    h1 {
+        position: center;
+        left: 200px;
+    }
+    
+    .bnt {
+        color: #1c201c;
+    }
+    /* Style the input fields */
+    
+    input {
+        padding: 10px;
+        width: 100%;
+        font-size: 17px;
+        font-family: Raleway;
+        border: 1px solid #aaaaaa;
+    }
+    /* Mark input boxes that gets an error on validation: */
+    
+    input.invalid {
+        background-color: #ffdddd;
+    }
+    /* Hide all steps by default: */
+    
+    .tab {
+        display: none;
+    }
+    /* Make circles that indicate the steps of the form: */
+    
+    .step {
+        height: 15px;
+        width: 15px;
+        margin: 0 2px;
+        background-color: #bbbbbb;
+        border: none;
+        border-radius: 50%;
+        display: inline-block;
+        opacity: 0.5;
+    }
+    /* Mark the active step: */
+    
+    .step.active {
+        opacity: 1;
+    }
+    /* Mark the steps that are finished and valid: */
+    
+    .step.finish {
+        background-color: #363636;
+    }
+    .diagramAlert {
+        padding: 20px;
+        background-color: #75a5ee9d; /* Red */
+        color: white;
+        margin-bottom: 15px;
+    }
+    .scatterPlotAlert {
+        padding: 20px;
+        background-color: #75a5ee9d; /* Red */
+        color: white;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
