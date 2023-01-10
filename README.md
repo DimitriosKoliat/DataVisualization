@@ -1,7 +1,7 @@
 # datApp
 
 This project was implemented by the students of the Department of Computer Science at the University of Ioannina 
-Dimitrios Koliatos, George Giatsos and Ioannis Koutroudis, by the supervision of proffessor Panos Vassiliadis.
+Dimitrios Koliatos, George Giatsos and Ioannis Koutroudis, by the supervision of proffessor Panagioths Vassiliadis.
 
 The problem concerning the programming exercise (project) of the course
 is data visualization. The goal of the visualization techniques we implemented is
